@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/tomppatomppa/fullstack-hy22-backend#readme",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.3",
     "morgan": "^1.10.0",
     "node": "^17.4.0"
