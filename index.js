@@ -3,7 +3,6 @@ const morgan = require('morgan')
 const cors = require('cors')
 require('dotenv').config()
 const Person = require('./models/person')
-const mongoose = require('mongoose')
 
 const app = express()
 
@@ -21,7 +20,17 @@ app.get('/api/persons', (request, response) => {
   })
   //mongoose.connection.close()
 })
-
+app.post('/api/persons', (request, response) => {
+  const body = request.body
+  console.log('Add or update Database')
+  const person = new Person({
+    name: body.name,
+    number: body.number,
+  })
+  person.save().then((result) => {
+    console.log(`added ${result}`)
+  })
+})
 // app.get('/api/persons/:id', (request, response) => {
 //   const id = Number(request.params.id)
 
