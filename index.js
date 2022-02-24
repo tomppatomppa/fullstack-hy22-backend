@@ -18,7 +18,6 @@ app.get('/api/persons', (request, response) => {
     console.log('Get Data from MongoDB')
     response.json(persons)
   })
-  //mongoose.connection.close()
 })
 app.post('/api/persons', (request, response) => {
   const body = request.body
@@ -27,21 +26,42 @@ app.post('/api/persons', (request, response) => {
     name: body.name,
     number: body.number,
   })
-  person.save().then((result) => {
-    console.log(`added ${result}`)
+  person.save().then((savedPerson) => {
+    console.log(`added ${savedPerson}`)
+    response.json(savedPerson)
   })
 })
-// app.get('/api/persons/:id', (request, response) => {
-//   const id = Number(request.params.id)
-
-//   const person = persons.find((person) => person.id === id)
-
-//   if (person) {
-//     response.json(person)
-//   } else {
-//     response.status(404).end()
-//   }
-// })
+app.get('/api/persons/:id', (request, response) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person)
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+      response.status(400).send({ error: 'malformatted id' })
+    })
+})
+app.delete('/api/persons/:id', (request, response) => {
+  console.log('delete id: ', request.params.id)
+  Person.findByIdAndRemove(request.params.id)
+    .then((person) => {
+      if (person) {
+        console.log('print persons', person)
+        response.status(204).end()
+      } else {
+        response.status(404).end()
+      }
+    })
+    .catch((error) => {
+      console.log(error)
+      response.status(400).send({ error: 'malformatted id' })
+    })
+  //response.status(204).end()
+})
 
 // app.get('/info', (request, response) => {
 //   const count = persons.length
