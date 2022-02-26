@@ -3,35 +3,42 @@ const morgan = require('morgan')
 const cors = require('cors')
 require('dotenv').config()
 const Person = require('./models/person')
+const { response } = require('express')
 
 const app = express()
 
-app.use(express.json())
 app.use(cors())
 app.use(morgan('tiny'))
 app.use(express.static('build'))
+app.use(express.json())
+//app.use(requestLogger)
+
 morgan.token('body', (req) => JSON.stringify(req.body))
 
-app.get('/api/persons', (request, response) => {
+app.get('/api/persons', (request, response, next) => {
   console.log('Get persons from Mongo Db')
-  Person.find({}).then((persons) => {
-    console.log('Get Data from MongoDB')
-    response.json(persons)
-  })
+  Person.find({})
+    .then((persons) => {
+      console.log('Get Data from MongoDB')
+      response.json(persons)
+    })
+    .catch((error) => next(error))
 })
 app.post('/api/persons', (request, response) => {
   const body = request.body
-  console.log('Add or update Database')
   const person = new Person({
     name: body.name,
     number: body.number,
   })
-  person.save().then((savedPerson) => {
-    console.log(`added ${savedPerson}`)
-    response.json(savedPerson)
-  })
+  person
+    .save()
+    .then((savedPerson) => {
+      console.log(`added ${savedPerson}`)
+      response.json(savedPerson)
+    })
+    .catch((error) => next(error))
 })
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then((person) => {
       if (person) {
@@ -40,28 +47,32 @@ app.get('/api/persons/:id', (request, response) => {
         response.status(404).end()
       }
     })
-    .catch((error) => {
-      console.log(error)
-      response.status(400).send({ error: 'malformatted id' })
-    })
+    .catch((error) => next(error))
 })
-app.delete('/api/persons/:id', (request, response) => {
-  console.log('delete id: ', request.params.id)
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then((person) => {
-      if (person) {
-        console.log('print persons', person)
-        response.status(204).end()
-      } else {
-        response.status(404).end()
-      }
+    .then((result) => {
+      response.status(204).end()
     })
-    .catch((error) => {
-      console.log(error)
-      response.status(400).send({ error: 'malformatted id' })
-    })
-  //response.status(204).end()
+    .catch((error) => next(error))
 })
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.log(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  next(error)
+}
+
+app.use(errorHandler)
 
 // app.get('/info', (request, response) => {
 //   const count = persons.length
