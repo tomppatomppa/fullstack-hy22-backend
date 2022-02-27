@@ -2,4 +2,4 @@
 
 #Link to phonebook backend deployed on Heroku
 
-https://vast-harbor-29890.herokuapp.com/api/persons
+https://vast-harbor-29890.herokuapp.com
