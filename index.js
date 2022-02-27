@@ -3,7 +3,6 @@ const morgan = require('morgan')
 const cors = require('cors')
 require('dotenv').config()
 const Person = require('./models/person')
-const { response } = require('express')
 
 const app = express()
 
@@ -24,19 +23,72 @@ app.get('/api/persons', (request, response, next) => {
     })
     .catch((error) => next(error))
 })
-app.post('/api/persons', (request, response) => {
+
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
-  const person = new Person({
+  Person.findOne({ name: body.name }).then((person) => {
+    if (!person) {
+      const person = new Person({
+        name: body.name,
+        number: body.number,
+      })
+      person
+        .save()
+        .then((savedPerson) => {
+          console.log(`added ${savedPerson}`)
+          response.json(savedPerson)
+        })
+        .catch((error) => next(error))
+    }
+  })
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+  console.log('post')
+  const body = request.body
+  const person = {
     name: body.name,
     number: body.number,
-  })
-  person
-    .save()
-    .then((savedPerson) => {
-      console.log(`added ${savedPerson}`)
-      response.json(savedPerson)
+  }
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson)
     })
     .catch((error) => next(error))
+
+  // Person.findOne({ name: `${body.name}` })
+  //   .then((persons) => {
+  //     if (persons) {
+  //       //update existing number
+  //       app.put('/api/persons/:id', (request, response, next) => {
+  //         console.log('id:', request.params.id)
+  //         const person = {
+  //           name: body.name,
+  //           number: body.number,
+  //         }
+  //         console.log('findbyid')
+  //         Person.findByIdAndUpdate(request.params.id, person)
+  //           .then((updatedPerson) => {
+  //             response.json(updatedPerson)
+  //           })
+  //           .catch((error) => next(error))
+  //       })
+  //     } else {
+  //       console.log('Add new')
+  //       const person = new Person({
+  //         name: body.name,
+  //         number: body.number,
+  //       })
+  //       person
+  //         .save()
+  //         .then((savedPerson) => {
+  //           console.log(`added ${savedPerson}`)
+  //           response.json(savedPerson)
+  //         })
+  //         .catch((error) => next(error))
+  //     }
+  //   })
+  //   .catch((error) => next(error))
 })
 app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
@@ -57,6 +109,15 @@ app.delete('/api/persons/:id', (request, response, next) => {
     .catch((error) => next(error))
 })
 
+app.get('/info', (request, response, next) => {
+  Person.estimatedDocumentCount({})
+    .then((count) => {
+      const date = new Date()
+      response.send(`<p>Phonebook has info for ${count} people</p>
+     <p> ${date} </p>`)
+    })
+    .catch((error) => next(error))
+})
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
