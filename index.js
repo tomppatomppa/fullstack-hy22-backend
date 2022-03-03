@@ -27,25 +27,37 @@ app.get('/api/persons', (request, response, next) => {
 app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
-  Person.findOne({ name: body.name }).then((person) => {
-    if (!person) {
-      const person = new Person({
-        name: body.name,
-        number: body.number,
-      })
-      person
-        .save()
-        .then((savedPerson) => {
-          console.log(`added ${savedPerson}`)
-          response.json(savedPerson)
-        })
-        .catch((error) => next(error))
-    }
+  const person = new Person({
+    name: body.name,
+    number: body.number,
   })
+  person
+    .save()
+    .then((savedPerson) => {
+      console.log('add new person')
+      response.json(savedPerson)
+    })
+    .catch((error) => next(error))
+  // Person.findOne({ name: body.name }).then((person) => {
+  //   if (!person) {
+  //     const person = new Person({
+  //       name: body.name,
+  //       number: body.number,
+  //     })
+  //     person
+  //       .save()
+  //       .then((savedPerson) => {
+  //         console.log(`added ${savedPerson}`)
+  //         response.json(savedPerson)
+  //       })
+  //       .catch((error) => next(error))
+  //   } else {
+  //     console.log('duplicate')
+  //   }
+  // })
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-  console.log('post')
   const body = request.body
   const person = {
     name: body.name,
